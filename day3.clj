@@ -20,14 +20,13 @@
   (= \# cell))
 
 (defn trajectory
-  "The seq of coordinates when following this slope."
-  ([slope]
-   (trajectory slope 1))
-  ([slope n]
-   (let [x (* (slope 0) n)
-         y (* (slope 1) n)]
-     (when (< y (count tree-map))
-       (cons [x y] (trajectory slope (inc n)))))))
+  "The seq of coordinates when following this slope.
+
+  Stop before reaching the bottom."
+  [[dx dy]]
+  (map vector
+       (map #(* dx %) (range))
+       (map #(* dy %) (range (count tree-map)))))
 
 (defn check-slope
   "The number of trees for this slope."
