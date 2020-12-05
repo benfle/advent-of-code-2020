@@ -2,45 +2,27 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
-(defn id
-  [row col]
-  (+ (* 8 row) col))
-
-(defn boarding-pass
+(defn seat-id
   [s]
-  (let [[row-chars col-chars] (partition-all 7 s)
-        row (Integer/parseInt (apply str (map {\F \0 \B \1} row-chars)) 2)
-        col (Integer/parseInt (apply str (map {\L \0 \R \1} col-chars)) 2)]
-    {:row row
-     :col col
-     :id (id row col)}))
+  (-> s
+      (str/escape {\F \0 \B \1
+                   \L \0 \R \1})
+      (Integer/parseInt 2)))
 
-(def boarding-passes
+(def seat-ids
   (with-open [rdr (io/reader "./day5.input")]
     (->> (line-seq rdr)
-         (map boarding-pass)
+         (map seat-id)
          doall)))
 
-(def answer1 (->> boarding-passes (map :id) (apply max)))
+(def answer1 (apply max seat-ids))
 
 (defn missing
-  [boarding-passes]
-  (let [seats-in-my-row (->> boarding-passes
-                             (group-by :row)
-                             (sort-by key)
-                             ;; seat is not in the "first" row
-                             (drop 1)
-                             ;; seat is not in the "last" row
-                             (drop-last 1)
-                             ;; only 7 seats are taken on my row
-                             (filter #(= 7 (count (val %))))
-                             first
-                             val)
-        row (-> seats-in-my-row first :row)
-        taken? (set (map :col seats-in-my-row))
-        col (first (remove taken? (range 1 8)))]
-    {:row row
-     :col col
-     :id (id row col)}))
+  [seat-ids]
+  (let [taken? (set seat-ids)]
+    (->> (range (apply min seat-ids)
+                (apply max seat-ids))
+         (remove taken?)
+         first)))
 
-(def answer2 (missing boarding-passes))
+(def answer2 (missing seat-ids))
