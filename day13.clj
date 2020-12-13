@@ -45,8 +45,6 @@
 (defn chinese-remainder-theorem
   "Implements the chinese remainder theorem.
 
-  From:
-
   Return the minimum x such that:
   x % pairs[0][0] = pairs[0][1]
   x % pairs[1][0] = pairs[1][1]
