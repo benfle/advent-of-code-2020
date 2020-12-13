@@ -24,24 +24,6 @@
 ;; Efficient implementation taken from:
 ;; https://www.geeksforgeeks.org/chinese-remainder-theorem-set-2-implementation/?ref=lbp
 
-(defn gcd-extended
-  "The extended Euclidean algorithm."
-  [a b]
-  (if (zero? a)
-    [0 1 b]
-    (let [[x1 y1 gcd] (gcd-extended (mod b a) a)]
-      [(- y1 (* x1 (quot b a))) x1 gcd])))
-
-(defn mod-inverse
-  "The modular multiplicative inverse of `a` under modulo `m`.
-
-  The solution to: a x ≅ 1 (mod m)."
-  [a m]
-  (let [[x y g] (gcd-extended a m)]
-    (if (not (= 1 g))
-      (throw (ex-info "The modulo inverse does not exist." {:a a :m m}))
-      (mod (+ m (mod x m)) m))))
-
 (defn chinese-remainder-theorem
   "Implements the chinese remainder theorem.
 
@@ -57,7 +39,8 @@
     (mod (reduce (fn [res [num rem]]
                    (let [pp (quot prod num)]
                      (+ res (* rem
-                               (mod-inverse pp num)
+                               (.modInverse (biginteger pp)
+                                            (biginteger num))
                                pp))))
                  0
                  pairs)
