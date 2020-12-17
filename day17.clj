@@ -52,12 +52,9 @@
 (defn do-one-cycle
   "Run one cycle on this state and return the next one."
   [state]
-  (reduce (fn [next-state coord]
-            (if (next-cube-active? state coord)
-              (conj next-state coord)
-              next-state))
-          #{}
-          (all-neighbor-coordinates state)))
+  (->> (all-neighbor-coordinates state)
+       (filter #(next-cube-active? state %))
+       set))
 
 (def answer1 (->> (iterate do-one-cycle (initial-state 3))
                   (take 7)
