@@ -18,7 +18,7 @@
   (let [[rules message] (->> (str/split s #"\n\n")
                              (map #(str/split % #"\n")))]
     {:rules (into {} (map parse-rule rules))
-     :messages (map seq message)}))
+     :messages message}))
 
 (def input (parse-input (slurp "day19.input")))
 
@@ -50,7 +50,7 @@
     (case type
       :terminal
       (if (= data (first message))
-        [(apply str (rest message))]
+        [(subs message 1)]
         [:error])
 
       :non-terminal
