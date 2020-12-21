@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
-(def input
+(def ingredients-lists
   (->> (str/split (slurp "day21.input") #"\n")
        (map (fn [line]
               (let [[ingredients allergens] (str/split line #" \(contains")]
@@ -16,33 +16,35 @@
                                 (set))})))
        (doall)))
 
-(defn allergen->ingredients
+(defn allergen->ingredientsg
   [ingredients-lists]
   (->> ingredients-lists
        (reduce (fn [m {:keys [ingredients allergens]}]
-                 (reduce (fn [m allergen]
-                           (update m allergen (fnil conj []) ingredients))
-                         m
-                         allergens))
+                 (merge-with concat m (zipmap allergens (repeat [ingredients]))))
                {})
        (map (fn [[allergen ingredients]]
               [allergen (apply set/intersection
                                (map set ingredients))]))
        (into {})))
 
+(defn fixed-point
+  [improve start]
+  (reduce #(if (= %1 %2) (reduced %1) %2)
+          (iterate improve start)))
+
 (defn ingredient->allergen
-  [allergen->ingredients]
-  (let [improve (fn [ingredient->allergen]
-                  (reduce (fn [ingredient->allergen [allergen ingredients]]
-                            (let [ingredients (remove #(contains? ingredient->allergen %)
-                                                      ingredients)]
-                              (if (= 1 (count ingredients))
-                                (assoc ingredient->allergen (first ingredients) allergen)
-                                ingredient->allergen)))
-                          ingredient->allergen
-                          allergen->ingredients))]
-    (reduce #(if (= %1 %2) (reduced %1) %2)
-            (iterate improve {}))))
+  [ingredients-lists]
+  (fixed-point
+   (fn [ingredient->allergen]
+     (reduce (fn [ingredient->allergen [allergen ingredients]]
+               (let [ingredients (remove #(contains? ingredient->allergen %)
+                                         ingredients)]
+                 (if (= 1 (count ingredients))
+                   (assoc ingredient->allergen (first ingredients) allergen)
+                   ingredient->allergen)))
+             ingredient->allergen
+             (allergen->ingredients ingredients-lists)))
+   {}))
 
 (defn count-ingredients
   [ingredients-lists ingredients]
@@ -56,16 +58,14 @@
        (mapcat :ingredients)
        set))
 
-(def answer1 (->> input
-                  (allergen->ingredients)
+(def answer1 (->> ingredients-lists
                   (ingredient->allergen)
                   (keys)
                   (set)
                   (set/difference (all-ingredients input))
                   (count-ingredients input)))
 
-(def answer2 (->> input
-                  (allergen->ingredients)
+(def answer2 (->> ingredients-lists
                   (ingredient->allergen)
                   (sort-by #(val %))
                   (map first)
