@@ -39,17 +39,12 @@
     (aset cups ^int c3 (aget cups destination))
     (aset cups destination ^int c1)))
 
-(defn do-n-move
-  [cups n]
-  (doseq [_ (range n)]
-    (do-one-move cups)))
-
 (def answer1 (let [cups (cups input)]
-               (do-n-move cups 100)
+               (dotimes [_ 100] (do-one-move cups))
                (apply str (rights cups 1))))
 
-(def answer2 (let [cups (cups (into input (range (inc (reduce max input)) 1000001)))]
-               (do-n-move cups 10000000)
-               (->> (rights cups 1)
-                    (take 2)
-                    (reduce *))))
+(def answer2 (time (let [cups (cups (into input (range (inc (reduce max input)) 1000001)))]
+                     (dotimes [_ 10000000] (do-one-move cups))
+                     (->> (rights cups 1)
+                          (take 2)
+                          (reduce *)))))
