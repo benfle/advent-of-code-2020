@@ -19,11 +19,11 @@
   (->> instructions
        (map #(reduce move [0 0] %))
        (frequencies)
-       (map (fn [[pos cnt]]
-              [pos (if (odd? cnt) :black :white)]))
-       (into {})))
+       (filter #(odd? (val %)))
+       (map first)
+       set))
 
-(def answer1 (count (filter #(= :black (val %)) tiling)))
+(def answer1 (count tiling))
 
 (defn neighbors
   [pos]
@@ -31,25 +31,21 @@
 
 (defn do-one-day
   [tiling]
-  (->> (keys tiling)
+  (->> tiling
        (mapcat neighbors)
-       set
+       (set)
        (map (fn [pos]
-              (let [color (get tiling pos :white)
-                    cnt (->> (neighbors pos)
-                             (map tiling)
-                             (filter #{:black})
-                             (count))]
-                [pos (cond
-                       (and (= color :black) (or (zero? cnt) (< 2 cnt))) :white
-                       (and (= color :white) (= 2 cnt))                  :black
-                       :else                                             color)])))
-       (into {})))
+              (let [color (if (contains? tiling pos) :black :white)
+                    cnt (count (keep tiling (neighbors pos)))]
+                (case color
+                  :black (when (not (or (zero? cnt) (< 2 cnt))) pos)
+                  :white (when (= 2 cnt) pos)))))
+       (remove nil?)
+       set))
 
 (def answer2
   (time
    (->> (iterate do-one-day tiling)
         (take 101)
         (last)
-        (filter #(= :black (val %)))
         (count))))
